@@ -12,8 +12,16 @@ var numQuestions = {
     choices:["10","20","30","40","50"]
 }
 
+var CardOptions = {
+    type: "list",
+    name: "Card Option",
+    message:"Please Select from the following options",
+    choices: ["Play premade game","Build your own cards"]
+}
+
 
 module.exports = {
     gameType,
-    testMe
+    numQuestions,
+    CardOptions
 }
