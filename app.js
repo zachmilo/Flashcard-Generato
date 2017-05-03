@@ -1,28 +1,35 @@
+var request = require("request");
+var inquirer = require("inquirer");
+var Entities = require("html-entities").AllHtmlEntities;
+
 var BasicCard = require("./BasicCard");
 var ClozeCard = require("./ClozeCard.js");
-var inquirer = require("inquirer");
 var prompts = require("./prompts");
-var request = require("request");
+
 
 var basicCardArray = [];
+var entities = new Entities(); // api passes back html special characters
 
 promptUser(prompts.gameType,function(result) {
     var num ={};
 
     if(result["Start Game"] === "Basic Card") {
-        promptUser(prompts.CardOptions,function(option){
+        promptUser(prompts.cardOptions,function(option){
             if(option["Card Option"] === "Play premade game") {
                 promptUser(prompts.numQuestions,function(numQuest) {
                     cardBasicPlay(numQuest["questionNum"]);
                 });
             }
-            // else {
-            //     cardBasicBuild();
-            // }
+             else {
+                 promptUser(prompts.numQuestions, function(numQuest) {
+                     //cardBasicBuild(numQuest["questionNum"]);
+                     cardBasicBuild(1);
+                 });
+            }
         });
     }
     else {
-        promptUser(prompts.CardOptions,function(option){
+        promptUser(prompts.cardOptions,function(option){
             if(option["Card Option"]=== "Play premade game") {
 
                 promptUser(prompts.numQuestions,function(numQuest){num = numQuest});
@@ -32,7 +39,6 @@ promptUser(prompts.gameType,function(result) {
                 cardClozeBuild();
             }
         });
-
     }
 });
 
@@ -44,30 +50,69 @@ function promptUser(promptType, callback) {
 }
 
 function cardBasicPlay(num) {
-    request("https://opentdb.com/api.php?amount="+num, function (error, response, body) {
-        //console.log('body:', body); // Print the HTML for the Google homepage.
-        // build question array
-        if(error) {
-            return
-        }
-        var result = JSON.parse(body).results;
-        console.log(result);
+    if(basicCardArray.length === 0) {
+        request("https://opentdb.com/api.php?amount="+num, function (error, response, body) {
+            if(error) {
+                return;
+            }
+            var result = JSON.parse(body).results;
+            console.log(result);
 
-        for (var question in result) {
-            var buildCard = BasicCard();
-            buildCard.front = result[question].question;
-            buildCard.back = result[question].correct_answer;
+            for (var question in result) {
+                var buildCard = BasicCard();
+                buildCard.front = entities.decode(result[question].question);
+                buildCard.back = entities.decode(result[question].correct_answer);
 
-            basicCardArray.push(buildCard);
-        }
-        console.log(basicCardArray);
-        // promptUser("buildquestion",function(){
-        //
-        // });
-    });
-    //https://opentdb.com/api.php?amount=9
+                basicCardArray.push(buildCard);
+            }
+        });
+    }
 }
 
-function cardBasicBuild() {
+function runCards(inc) {
+    console.log("what are you "+inc);
+    if(inc < basicCardArray.length) {
+        console.log(basicCardArray[inc].front);
+        promptUser(prompts.showFront,function(cardOptions) {
+            if(cardOptions["showFront"] === "Show answer") {
+                console.log(basicCardArray[inc].back)
+                promptUser(prompts.showBack,function(cardOptions) {
+                    if(cardOptions["showBack"] === "Next card") {
+                        runCards(inc+1);
+                    }
+                    else {
+                        runCards(inc);
+                    }
+                });
+            }
+            else {
+                runCards(inc+1);
+            }
+        });
+    }
+    else {
+        console.log("No more cards found");
+    }
+}
 
+function cardBasicBuild(totalQuestions) {
+        var buildCard = BasicCard();
+        if(totalQuestions > 0 ) {
+            promptUser(prompts.buildCardFront, function(front) {
+                buildCard.front = front["CardFront"];
+                promptUser(prompts.buildCardBack, function(back) {
+                    buildCard.back = back["CardBack"];
+                    basicCardArray.push(buildCard);
+                    cardBasicBuild(totalQuestions-1);
+                });
+            });
+        }
+        else {
+            promptUser(prompts.readyToPlay,function(isReady) {
+                console.log(isReady);
+                if(isReady["ready"]) {
+                    runCards(0);
+                }
+            });
+        }
 }

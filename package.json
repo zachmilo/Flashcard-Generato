@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/zachmilo/Flashcard-Generato#readme",
   "dependencies": {
+    "html-entities": "^1.2.1",
     "inquirer": "^3.0.6",
     "request": "^2.81.0"
   }
