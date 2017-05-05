@@ -4,13 +4,13 @@
 //     partial = "..... was first president of the united states";
 //     fullText ="George was the president of the united states";
 // }
-var ClozeCard = function(text, cloze){
+var ClozeCard = function(text, cloze, partial){
   if (this instanceof ClozeCard){
-    this.name = name;
-    this.age = age;
-    this.job = job;
+    this.fullText = text;
+    this.cloze = cloze;
+    this.partial = partial;
   } else {
-    return new ClozeCard(text, cloze);
+    return new ClozeCard(text, cloze,partial);
   }
 }
 

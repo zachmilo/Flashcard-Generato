@@ -51,6 +51,30 @@ var showBack = {
     choices:["show Question", "Next card"]
 }
 
+var ClozeCardOptions = {
+    type: "list",
+    name: "Card Option",
+    message:"Please Select from the following options:",
+    choices: ["Build your own cards"]
+}
+
+var cloze = {
+    type:"input",
+    name:"cloze",
+    message:"Please provide the cloze",
+}
+
+var partial = {
+    type:"input",
+    name:"partial",
+    message:"Please provide the partial text",
+}
+var fullText = {
+    type:"input",
+    name:"fullText",
+    message:"Please provide the full text",
+}
+
 module.exports = {
     gameType,
     numQuestions,
@@ -59,6 +83,9 @@ module.exports = {
     buildCardBack,
     readyToPlay,
     showFront,
-    showBack
-
+    showBack,
+    ClozeCardOptions,
+    cloze,
+    partial,
+    fullText
 }

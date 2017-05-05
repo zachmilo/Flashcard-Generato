@@ -8,6 +8,7 @@ var prompts = require("./prompts");
 
 
 var basicCardArray = [];
+var clozeCardArray = [];
 var entities = new Entities(); // api passes back html special characters
 
 promptUser(prompts.gameType,function(result) {
@@ -22,22 +23,17 @@ promptUser(prompts.gameType,function(result) {
             }
              else {
                  promptUser(prompts.numQuestions, function(numQuest) {
-                     //cardBasicBuild(numQuest["questionNum"]);
-                     cardBasicBuild(1);
+                     cardBasicBuild(numQuest["questionNum"]);
                  });
             }
         });
     }
     else {
-        promptUser(prompts.cardOptions,function(option){
-            if(option["Card Option"]=== "Play premade game") {
+        promptUser(prompts.ClozeCardOptions,function(option){
+            promptUser(prompts.numQuestions,function(numQuest) {
+                cardClozeBuild(numQuest["questionNum"]);
+            });
 
-                promptUser(prompts.numQuestions,function(numQuest){num = numQuest});
-                cardClozePlay(num);
-            }
-            else {
-                cardClozeBuild();
-            }
         });
     }
 });
@@ -56,7 +52,6 @@ function cardBasicPlay(num) {
                 return;
             }
             var result = JSON.parse(body).results;
-            console.log(result);
 
             for (var question in result) {
                 var buildCard = BasicCard();
@@ -65,17 +60,18 @@ function cardBasicPlay(num) {
 
                 basicCardArray.push(buildCard);
             }
+            runCards(0);
         });
     }
 }
 
 function runCards(inc) {
-    console.log("what are you "+inc);
+
     if(inc < basicCardArray.length) {
-        console.log(basicCardArray[inc].front);
+        console.log("\nQuestion: "+basicCardArray[inc].front+"\n");
         promptUser(prompts.showFront,function(cardOptions) {
             if(cardOptions["showFront"] === "Show answer") {
-                console.log(basicCardArray[inc].back)
+                console.log("\nAnswer: "+basicCardArray[inc].back+"\n")
                 promptUser(prompts.showBack,function(cardOptions) {
                     if(cardOptions["showBack"] === "Next card") {
                         runCards(inc+1);
@@ -109,10 +105,60 @@ function cardBasicBuild(totalQuestions) {
         }
         else {
             promptUser(prompts.readyToPlay,function(isReady) {
-                console.log(isReady);
                 if(isReady["ready"]) {
-                    runCards(0);
+                    runClozeCards(0);
                 }
             });
         }
+}
+
+function cardClozeBuild(totalQuestions) {
+    var buildCard = ClozeCard();
+    if(totalQuestions > 0 ) {
+        promptUser(prompts.cloze, function(cloze) {
+            buildCard.cloze = cloze["cloze"];
+            promptUser(prompts.partial, function(partial) {
+                buildCard.partial = partial["partial"];
+            });
+            promptUser(prompts.fullText, function(fullText) {
+                buildCard.fullText = fullText["fullText"];
+                clozeCardArray.push(buildCard);
+                cardClozeBuild(totalQuestions-1);
+            });
+        });
+    }
+    else {
+        promptUser(prompts.readyToPlay,function(isReady) {
+            if(isReady["ready"]) {
+                runClozeCards(0);
+            }
+        });
+    }
+}
+
+function runClozeCards(inc) {
+
+    if(inc < clozeCardArray.length) {
+        console.log("\nQuestion: "+clozeCardArray[inc].partial+"\n");
+        promptUser(prompts.showFront,function(cardOptions) {
+            if(cardOptions["showFront"] === "Show answer") {
+                console.log("\nCloze: "+clozeCardArray[inc].cloze+"\n")
+                console.log("Full text: "+clozeCardArray[inc].fullText+"\n")
+                promptUser(prompts.showBack,function(cardOptions) {
+                    if(cardOptions["showBack"] === "Next card") {
+                        runClozeCards(inc+1);
+                    }
+                    else {
+                        runClozeCards(inc);
+                    }
+                });
+            }
+            else {
+                runClozeCards(inc+1);
+            }
+        });
+    }
+    else {
+        console.log("No more cards found");
+    }
 }
